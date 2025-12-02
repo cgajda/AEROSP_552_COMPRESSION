@@ -25,6 +25,7 @@ namespace CompressionLib {
   // Compress all files in a folder (for now: stub)
   Result compressFolder(Algorithm algo, const std::string& folder);
 
+    Result decompressFile(Algorithm algo, const std::string& path);
 } // namespace CompressionLib
 
 #endif
