@@ -1,4 +1,3 @@
-// CompressionLib.cpp
 #include "compress/Lib/CompressionLib/CompressionLib.hpp"
 
 #include "compress/Lib/CompressionLib/Huffman.hpp"
@@ -17,7 +16,7 @@ Result compressFile(Algorithm algo, const std::string& path) {
       return dctCompressFile(path);
     default: {
       Result r{};
-      r.error = -99; // unknown algorithm
+      r.error = -99;
       return r;
     }
   }
@@ -29,12 +28,9 @@ Result decompressFile(Algorithm algo, const std::string& path) {
       return huffmanDecompressFile(path);
     case Algorithm::LZSS:
       return lzssDecompressFile(path);
-    case Algorithm::DCT: {
-      // DCT decompression not implemented yet
-      Result r{};
-      r.error = -10; // "DCT decompression not implemented"
-      return r;
-    }
+    case Algorithm::DCT:
+      // path should be the .dct file
+      return dctDecompressFile(path);
     default: {
       Result r{};
       r.error = -99;
@@ -43,9 +39,7 @@ Result decompressFile(Algorithm algo, const std::string& path) {
   }
 }
 
-// If you already have a stub for compressFolder, keep it as-is for now
 Result compressFolder(Algorithm algo, const std::string& folder) {
-  // TODO: real folder recursion; for now just stub
   (void)algo;
   (void)folder;
   Result r{};

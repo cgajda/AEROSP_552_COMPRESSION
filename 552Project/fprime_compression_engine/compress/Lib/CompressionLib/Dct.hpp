@@ -28,6 +28,23 @@ namespace CompressionLib {
    */
   Result dctCompressFile(const std::string& inPath);
 
+    /**
+   * DCT-based decompressor.
+   *
+   * Expected input (.dct):
+   *  - Format as written by dctCompressFile above.
+   *
+   * Output:
+   *  - Binary PGM ("P5") grayscale image at "<inPath>.pgm"
+   *    with original width/height, 8-bit pixels.
+   *
+   * Result:
+   *  - bytesIn  = size of .dct file
+   *  - bytesOut = size of .pgm file
+   *  - error    = 0 on success, <0 on error
+   */
+  Result dctDecompressFile(const std::string& inPath);
+  
 } // namespace CompressionLib
 
 #endif
