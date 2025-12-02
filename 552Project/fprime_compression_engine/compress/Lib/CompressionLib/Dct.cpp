@@ -4,8 +4,13 @@
 #include <vector>
 #include <fstream>
 #include <cmath>
-#include <cstring>   // std::memcpy
+#include <cstring>   // std::strncmp
 #include <algorithm> // std::min, std::max
+#include <cctype>    // std::tolower
+#include <string>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "compress/Lib/CompressionLib/stb_image.h"
 
 namespace CompressionLib {
 
@@ -47,7 +52,8 @@ bool loadPpmP6(
   width  = static_cast<std::uint16_t>(w);
   height = static_cast<std::uint16_t>(h);
 
-  std::size_t expectedBytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 3u;
+  std::size_t expectedBytes =
+      static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 3u;
   rgb.resize(expectedBytes);
 
   in.read(reinterpret_cast<char*>(rgb.data()), expectedBytes);
@@ -105,7 +111,7 @@ inline double alpha(int k) {
   return (k == 0) ? 1.0 / std::sqrt(2.0) : 1.0;
 }
 
-// 2D 8×8 DCT on a block
+// 2D 8×8 forward DCT on a block
 void dct8x8(const float in[64], float out[64]) {
   const double pi = std::acos(-1.0);
   for (int v = 0; v < 8; ++v) {
@@ -181,6 +187,17 @@ void idct8x8(const float in[64], float out[64]) {
   }
 }
 
+// Simple extension check for ".ppm" (case-insensitive)
+bool hasPpmExtension(const std::string& path) {
+  auto dot = path.find_last_of('.');
+  if (dot == std::string::npos) return false;
+  std::string ext = path.substr(dot + 1);
+  for (char& c : ext) {
+    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  }
+  return ext == "ppm";
+}
+
 } // namespace
 
 // ======================
@@ -200,12 +217,34 @@ Result dctCompressFile(const std::string& inPath) {
     return r;
   }
 
-  // 1) Load PPM (P6)
+  // 1) Decode input into RGB buffer + dimensions
   std::uint16_t width = 0, height = 0;
   std::vector<std::uint8_t> rgb;
-  if (!loadPpmP6(inPath, width, height, rgb)) {
-    r.error = -2; // unsupported or invalid format
-    return r;
+
+  const bool isPpm = hasPpmExtension(inPath);
+
+  if (isPpm) {
+    // Native PPM path
+    if (!loadPpmP6(inPath, width, height, rgb)) {
+      r.error = -2; // invalid PPM
+      return r;
+    }
+  } else {
+    // Non-PPM: use stb_image to decode into RGB
+    int w = 0, h = 0, chans = 0;
+    unsigned char* data = stbi_load(inPath.c_str(), &w, &h, &chans, 3);
+    if (!data) {
+      r.error = -7; // unsupported / failed decode
+      return r;
+    }
+
+    width  = static_cast<std::uint16_t>(w);
+    height = static_cast<std::uint16_t>(h);
+
+    std::size_t count = static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 3u;
+    rgb.assign(data, data + count);
+
+    stbi_image_free(data);
   }
 
   // 2) RGB -> grayscale
@@ -217,7 +256,7 @@ Result dctCompressFile(const std::string& inPath) {
   std::vector<float> padded;
   padToBlockSize(gray, width, height, paddedW, paddedH, padded);
 
-  const int block = 8;
+  const int block   = 8;
   const int blocksX = paddedW / block;
   const int blocksY = paddedH / block;
 
@@ -244,8 +283,8 @@ Result dctCompressFile(const std::string& inPath) {
   out.write(reinterpret_cast<const char*>(&channels), sizeof(channels));
 
   // 6) Process each 8x8 block
-  float blockIn[64];
-  float blockDct[64];
+  float       blockIn[64];
+  float       blockDct[64];
   std::int16_t blockQ[64];
 
   for (int by = 0; by < blocksY; ++by) {
@@ -311,8 +350,9 @@ Result dctDecompressFile(const std::string& inPath) {
     return r;
   }
 
-  std::uint16_t width = 0, height = 0;
-  in.read(reinterpret_cast<char*>(&width), sizeof(width));
+  std::uint16_t width  = 0;
+  std::uint16_t height = 0;
+  in.read(reinterpret_cast<char*>(&width),  sizeof(width));
   in.read(reinterpret_cast<char*>(&height), sizeof(height));
   if (!in || width == 0 || height == 0) {
     r.error = -4; // invalid header
@@ -341,8 +381,8 @@ Result dctDecompressFile(const std::string& inPath) {
 
   // 4) For each block: read Q coefficients, dequantize, IDCT, write block
   std::int16_t blockQ[64];
-  float blockF[64];
-  float blockSpatial[64];
+  float        blockF[64];
+  float        blockSpatial[64];
 
   for (int by = 0; by < blocksY; ++by) {
     for (int bx = 0; bx < blocksX; ++bx) {

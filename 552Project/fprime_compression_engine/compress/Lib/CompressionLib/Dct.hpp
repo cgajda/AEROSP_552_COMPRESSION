@@ -9,42 +9,51 @@ namespace CompressionLib {
   /**
    * Lossy DCT-based image compressor.
    *
-   * Expected input:
-   *  - 8-bit binary PPM ("P6") file
-   *  - 3 channels (RGB), maxval <= 255
+   * Supported input formats:
+   *  - Native: 8-bit binary PPM ("P6") RGB
+   *  - Via stb_image conversion (decoded to RGB in-memory):
+   *      PNG, JPEG, BMP, TGA, PSD, HDR, PIC, PNM, QOI, etc.
    *
-   * Output:
-   *  - Custom .dct file:
-   *      [char magic[4]]      = "DCT1"
-   *      [uint16_t width]
-   *      [uint16_t height]
-   *      [uint8_t channels]   = 1 (grayscale)
-   *      [int16_t coeffs[]]   = quantized 8x8 DCT coefficients in raster 8x8 order
+   * Output (.dct) format:
+   *  - char    magic[4]   = "DCT1"
+   *  - uint16  width      = original width (before padding)
+   *  - uint16  height     = original height (before padding)
+   *  - uint8   channels   = 1 (grayscale)
+   *  - int16   coeffs[]   = quantized 8×8 DCT coefficients, block-raster order
    *
-   * Returns:
-   *  - Result.bytesIn  = size of input image
-   *  - Result.bytesOut = size of .dct file
-   *  - Result.error    = 0 on success, <0 on error
+   * Result:
+   *  - bytesIn  = size of original input file (PNG/JPG/PPM/etc.)
+   *  - bytesOut = size of .dct file
+   *  - error    = 0 on success
+   *              -1: could not open input or size 0
+   *              -2: invalid PPM file when extension is .ppm
+   *              -3: could not open output file
+   *              -7: stb_image failed to decode non-PPM input
    */
   Result dctCompressFile(const std::string& inPath);
 
-    /**
+  /**
    * DCT-based decompressor.
    *
-   * Expected input (.dct):
-   *  - Format as written by dctCompressFile above.
+   * Expected input:
+   *  - .dct file created by dctCompressFile (magic "DCT1").
    *
    * Output:
    *  - Binary PGM ("P5") grayscale image at "<inPath>.pgm"
    *    with original width/height, 8-bit pixels.
    *
    * Result:
-   *  - bytesIn  = size of .dct file
-   *  - bytesOut = size of .pgm file
-   *  - error    = 0 on success, <0 on error
+   *  - bytesIn  = size of input .dct file
+   *  - bytesOut = size of output .pgm file
+   *  - error    = 0 on success
+   *              -1: could not open input or size 0
+   *              -3: could not open output file
+   *              -4: invalid header / magic / dimensions
+   *              -5: unsupported channels (must be 1)
+   *              -6: truncated coefficient data
    */
   Result dctDecompressFile(const std::string& inPath);
-  
+
 } // namespace CompressionLib
 
 #endif
