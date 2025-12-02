@@ -6,6 +6,12 @@
 cmake_minimum_required(VERSION 3.24.2)
 project(compress C CXX)
 
+# ---- Set C++ standard for the whole project ----
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# optional, but nice: prefer -std=c++17 over gnu++17
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 ###
 # F' Core Setup
 # This includes all of the F prime core components, and imports the make-system.

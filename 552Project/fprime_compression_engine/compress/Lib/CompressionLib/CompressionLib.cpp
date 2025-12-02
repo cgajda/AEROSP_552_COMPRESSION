@@ -74,4 +74,19 @@ namespace CompressionLib {
     return total;
   }
 
+  Result decompressFile(Algorithm algo, const std::string& path) {
+    switch (algo) {
+      case Algorithm::HUFFMAN:
+        return huffmanDecompressFile(path);
+      case Algorithm::LZSS:
+        return lzssDecompressFile(path);
+      case Algorithm::DCT:
+        // return dctDecompressFile(path);
+        break;
+    }
+    Result r{};
+    r.error = -99;
+    return r;
+  }
+
 } // namespace CompressionLib

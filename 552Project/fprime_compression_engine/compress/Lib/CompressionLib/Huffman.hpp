@@ -10,6 +10,7 @@ namespace CompressionLib {
   // returns Result with .error = 0 on success
   Result huffmanCompressFile(const std::string& inPath);
 
+    Result huffmanDecompressFile(const std::string& inPath);
 } // namespace CompressionLib
 
 #endif

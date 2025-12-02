@@ -8,6 +8,8 @@ namespace CompressionLib {
 
   Result lzssCompressFile(const std::string& inPath);
 
+  Result lzssDecompressFile(const std::string& inPath);
+  
 } // namespace CompressionLib
 
 #endif
