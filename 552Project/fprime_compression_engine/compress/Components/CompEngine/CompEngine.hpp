@@ -26,6 +26,13 @@ namespace COMP {
         const Fw::CmdStringArg& path
     ) override;
 
+    void DECOMPRESS_FILE_cmdHandler(
+        FwOpcodeType opCode,
+        U32 cmdSeq,
+        COMP::Algo algo,
+        const Fw::CmdStringArg& inputPath
+    ) override;
+
     void COMPRESS_FOLDER_cmdHandler(
         FwOpcodeType opCode,
         U32 cmdSeq,
@@ -64,6 +71,14 @@ namespace COMP {
         U32& bytesIn,
         U32& bytesOut
     );
+
+    U32 doFileDecompression(
+      COMP::Algo algo,
+      const Fw::CmdStringArg& path,
+      U32& bytesIn,
+      U32& bytesOut
+    );
+
 
   private:
     // runtime working copy of DefaultAlgo

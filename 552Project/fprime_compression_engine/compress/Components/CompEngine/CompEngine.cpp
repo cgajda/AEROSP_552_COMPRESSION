@@ -54,6 +54,34 @@ namespace COMP {
     return (r.error == 0) ? 0U : static_cast<U32>(-r.error);
   }
 
+  U32 CompEngine::doFileDecompression(
+      COMP::Algo algo,
+      const Fw::CmdStringArg& path,
+      U32& bytesIn,
+      U32& bytesOut
+  ) {
+      // F´ enum → CompressionLib::Algorithm
+      auto libAlgo = static_cast<CompressionLib::Algorithm>(
+        static_cast<std::uint8_t>(algo)
+      );
+      // If COMP::Algo isn't directly castable, replace with a small switch.
+
+      const std::string inputPath(path.toChar());
+
+      // Call into your library: it decides how to name the decompressed output file
+      CompressionLib::Result res = CompressionLib::decompressFile(libAlgo, inputPath);
+
+      // Propagate byte counts back to the command handler
+      bytesIn  = res.bytesIn;   // adjust field names if different
+      bytesOut = res.bytesOut;
+
+      // Return an F´-style status code (0 == success, nonzero == error)
+      return static_cast<U32>(res.error);
+  }
+
+
+  
+
   U32 CompEngine::doFolderCompression(
       COMP::Algo algo,
       const Fw::CmdStringArg& folder,
@@ -154,6 +182,65 @@ namespace COMP {
       this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::EXECUTION_ERROR);
     }
   }
+
+  void CompEngine::DECOMPRESS_FILE_cmdHandler(
+      FwOpcodeType opCode,
+      U32 cmdSeq,
+      COMP::Algo algo,
+      const Fw::CmdStringArg& inputPath
+  ) {
+    // 1) Validate algorithm
+    if (!this->algoIsValid(algo)) {
+      this->log_WARNING_LO_InvalidAlgorithm(static_cast<U8>(algo));
+      this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::FORMAT_ERROR);
+      return;
+    }
+
+    // (Optional) validate paths are non-empty
+    if (inputPath.toChar()[0] == '\0') {
+      // If you add an InvalidPath event, you can log it here.
+      // this->log_WARNING_LO_InvalidPath(inputPath, outputPath);
+      this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::FORMAT_ERROR);
+      return;
+    }
+
+    // 2) Log request (mirroring CompressionRequested)
+    this->log_ACTIVITY_HI_DecompressionRequested(algo, inputPath);
+
+    // 3) Run decompression
+    U32 bytesIn  = 0U;
+    U32 bytesOut = 0U;
+    const U32 result = this->doFileDecompression(
+        algo,
+        inputPath,
+        bytesIn,
+        bytesOut
+    );
+
+    // 4) Handle result: mirror COMPRESS_FILE behavior
+    if (result == 0U) {
+      this->log_ACTIVITY_LO_DecompressionSucceeded(bytesIn, bytesOut);
+
+      this->tlmWrite_LastAlgo(algo);
+      const F32 ratio =
+          (bytesIn > 0U) ? static_cast<F32>(bytesOut) / static_cast<F32>(bytesIn) : 0.0F;
+      this->tlmWrite_LastRatio(ratio);
+      this->tlmWrite_LastResultCode(0U);
+
+      this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+    } else {
+      this->log_WARNING_HI_DecompressionFailed(result);
+
+      this->tlmWrite_LastAlgo(algo);
+      this->tlmWrite_LastRatio(0.0F);
+      this->tlmWrite_LastResultCode(result);
+
+      this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::EXECUTION_ERROR);
+    }
+  }
+
+
+
 
   void CompEngine::SET_DEFAULT_ALGO_cmdHandler(
       FwOpcodeType opCode,

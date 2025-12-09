@@ -18,25 +18,31 @@ module COMP {
         @ algo: 0=HUFFMAN, 1=LZSS, 2=DCT
         async command COMPRESS_FILE(
             algo: Algo,
-            path: string size 128
+            path: string size 1024
         ) opcode 0x00
 
         @ Compress an entire folder/directory. Exact behavior is up to the impl
         @ (e.g. zip-then-compress, or compress each file).
         async command COMPRESS_FOLDER(
             algo: Algo,
-            folder: string size 128
+            folder: string size 1024
         ) opcode 0x01
+
+        @ Decompress a file on the target system.
+        async command DECOMPRESS_FILE(
+            algo: Algo,
+            inputPath: string size 1024
+        ) opcode 0x02
 
         @ Set the algorithm that will be used when a request doesn’t specify one.
         async command SET_DEFAULT_ALGO(
             algo: Algo
-        ) opcode 0x02
+        ) opcode 0x03
 
         @ Standard ping to verify command/response path.
         sync command PING(
             key: U32
-        ) opcode 0x03
+        ) opcode 0x04
 
         ##############################################################################
         # Telemetry                                                                 #
@@ -58,7 +64,7 @@ module COMP {
         @ A compression request was accepted by the component
         event CompressionRequested(
             algo: Algo,
-            target: string size 64
+            target: string size 1024
         ) severity activity high \
           format "Compression requested: algo={}, target={}"
 
@@ -75,11 +81,33 @@ module COMP {
         ) severity warning high \
           format "Compression failed: code={}"
 
+            @ A decompression command was received.
+        event DecompressionRequested(
+            algo: Algo,
+            target: string size 1024
+        ) severity activity high \
+          format "Decompression requested: algo={}, target={}"
+
+        @ A file was successfully decompressed.
+        event DecompressionSucceeded(
+            bytesIn: U32,
+            bytesOut: U32
+        ) severity activity low \
+          format "Decompression succeeded: in={}, out={}"
+
+        @ Decompression failed with a non-zero result code.
+        event DecompressionFailed(
+            code: U32
+        ) severity warning high \
+          format "Decompression failed: code={}"
+
+
         @ Command referenced an unsupported algorithm
         event InvalidAlgorithm(
             algo: U8
         ) severity warning low \
           format "Invalid compression algorithm: {}"
+
 
         ##############################################################################
         # Parameters                                                                #
