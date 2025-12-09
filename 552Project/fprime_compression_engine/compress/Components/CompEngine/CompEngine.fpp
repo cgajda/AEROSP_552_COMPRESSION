@@ -7,6 +7,12 @@ module COMP {
         DCT     = 2
     }
 
+    @ Kinds of operations supported
+    enum OperationKind {
+        COMPRESS = 0
+        DECOMPRESS = 1
+    }
+
     @ Component for compressing files/folders in the file system
     active component CompEngine {
 
@@ -107,6 +113,21 @@ module COMP {
             algo: U8
         ) severity warning low \
           format "Invalid compression algorithm: {}"
+
+        @ Summary table of executed compression/decompression. More extractable data for plotting
+        event AlgoRunSummary(
+            algo: Algo,
+            op: OperationKind,
+            inputPath: string size 256,
+            bytesIn: U32,
+            bytesOut: U32,
+            ratio: F32,
+            durationUsec: U32,
+            avgCpuTimes100: U16,
+            avgRssKiB: U32
+        ) severity activity high \
+            format "RUN_SUMMARY: algo={}, op={}, in={}, bytes_in={}, bytes_out={}, ratio={}, dt_us={}, cpu_x100={}, rss_kib={}"
+  
 
 
         ##############################################################################
