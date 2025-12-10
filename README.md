@@ -1,4 +1,4 @@
-# <img src="logo.svg" width="420">
+# <img src="logo.png" width="420">
 
 # F´ Compression Engine  
 *A modular lossless + lossy compression library integrated into NASA JPL’s F´ flight software framework.*
@@ -65,3 +65,4 @@ Ensure you get the "green bubble of hope" and not the "red X of death". Enter th
 
 ### 9. Write the log out to a csv file, run the MATLAB script in the parent directory, and observe your data!
 # <img src="silesia_compression.png" width="420">
+
