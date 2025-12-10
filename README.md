@@ -1,4 +1,6 @@
-# <img src="logo.png" width="420">
+<p align="center">
+# <img src="logo.png" width="600">
+</p>
 
 # F´ Compression Engine  
 *A modular lossless + lossy compression library integrated into NASA JPL’s F´ flight software framework.*
@@ -52,17 +54,18 @@ fprime-gds
 ```
 ### 5. Web browser opens automatically
 Ensure you get the "green bubble of hope" and not the "red X of death". Enter the commanding tab at the topbar and select the compression command from the dropdown.
-# <img src="compression_gui.png" width="420">
+# <img src="compression_gui.png" width="1000">
 
 ### 6. Enter the desired algorithm and filepath, then send command
-# <img src="enter_command.png" width="420">
+# <img src="enter_command.png" width="1000">
 
 ### 7. Verify command success in the events tab
-# <img src="event_confirm.png" width="420">
+# <img src="event_confirm.png" width="1000">
 
 ### 8. Extract the logfile either from the gui (copy paste) or in the logs stored on the machine running the deployment.
-# <img src="log_output.png" width="420">
+# <img src="log_output.png" width="1000">
 
 ### 9. Write the log out to a csv file, run the MATLAB script in the parent directory, and observe your data!
-# <img src="silesia_compression.png" width="420">
+# <img src="silesia_compression.png" width="1000">
+
 
