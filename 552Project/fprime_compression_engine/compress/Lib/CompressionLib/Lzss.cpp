@@ -160,14 +160,30 @@ bool lzssDecompressBuffer(const std::vector<std::uint8_t>& in,
 
 // Helper to choose an output path from an input .lzss file
 std::string deriveOutputPath(const std::string& inPath) {
-  const std::string ext = ".lzss";
-  if (inPath.size() >= ext.size() &&
-      inPath.compare(inPath.size() - ext.size(), ext.size(), ext) == 0) {
-    // Strip ".lzss"
-    return inPath.substr(0, inPath.size() - ext.size());
+  const std::string algoExt = ".lzss";
+
+  // 1) Strip ".lzss" if present
+  std::string tmp = inPath;
+  if (tmp.size() >= algoExt.size() &&
+      tmp.compare(tmp.size() - algoExt.size(), algoExt.size(), algoExt) == 0) {
+    tmp.erase(tmp.size() - algoExt.size());  // remove trailing ".lzss"
+  } else {
+    // Fallback: no .lzss suffix → just append "_DC"
+    return inPath + "_DC";
   }
-  // Fallback
-  return inPath + ".orig";
+
+  // 2) Find original extension (e.g., ".txt")
+  auto dotPos = tmp.find_last_of('.');
+  if (dotPos == std::string::npos) {
+    // No extension: just append "_DC"
+    return tmp + "_DC";
+  }
+
+  std::string base    = tmp.substr(0, dotPos);  // ".../dickens"
+  std::string origExt = tmp.substr(dotPos);     // ".txt"
+
+  // 3) Insert "_DC" before original extension
+  return base + "_DC" + origExt;               // ".../dickens_DC.txt"
 }
 
 } // namespace
