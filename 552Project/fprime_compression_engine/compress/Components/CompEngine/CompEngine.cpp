@@ -1,7 +1,7 @@
 #include "compress/Components/CompEngine/CompEngine.hpp"
 #include "compress/Lib/CompressionLib/CompressionLib.hpp"
 #include <cstring>
-#include <unistd.h>    // sysconf
+#include <unistd.h> 
 #include <fstream>
 #include <sys/resource.h>
 #include "Fw/FPrimeBasicTypes.hpp"
